@@ -1,0 +1,7 @@
+{
+  "name": "my-app",
+  "dependencies": {
+    "aws-sdk": "^2.717.0",
+    "uuid": "^8.2.0"
+  }
+}

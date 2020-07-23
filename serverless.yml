@@ -1,0 +1,47 @@
+service: my-app
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  iamRoleStatements: # allow lamdbas to get/put to dynamodb
+    - Effect: Allow
+      Action:
+        - dynamoDB:PutItem
+        - dynamoDB:GetItem
+      Resource: "arn:aws:dynamodb:us-east-1:004654037231:table/todos" # arn:aws:service:region:accountid:resourcetype:resource, wildcards can be used
+
+functions:
+  createTodo:
+    handler: create.run
+    events:
+      - http:
+          path: todos/{id}
+          method: post
+          request:
+          parameters:
+            paths:
+              id: true
+  getTodo:
+    handler: get.run
+    events:
+      - http:
+          path: todos
+          method: get
+
+resources:
+  Resources: # add raw Cloudformation resources, this has to be nested, bc cloudformation also supports other keywords, etc inputs/outputs
+    TodosDynamoDbTable: # resoure name
+      Type: "AWS::DynamoDB::Table" # resource type
+      DeletionPolicy: Retain
+      Properties: # minimal configuration: name, prim/sec indices name
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+            # other attributes are still allowed, only the keyschema is required here
+        ProvisionedThroughput: # throughput capacity, autoscaling
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: "todos"
